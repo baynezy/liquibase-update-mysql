@@ -128,7 +128,7 @@ inputs:
     description: 'Should Liquibase compare column order in diff operation?'
     required: false
   duplicateFileMode: # string
-    description: 'How to handle multiple files being found in the search path that have duplicate paths. Options are WARN (log warning and choose one at random) or ERROR (fail current operation)'
+    description: 'How to handle multiple files being found in the search path that have duplicate paths. Options are SILENT (do not log and choose one at random), DEBUG, INFO, WARN (log at the given level and choose one at random), or ERROR (fail current operation).'
     required: false
   errorOnCircularIncludeAll: # bool
     description: 'Throw an error if Liquibase detects that an includeAll will cause a circular reference (and thus a changelog parse error).'
@@ -149,7 +149,7 @@ inputs:
     description: 'Should Liquibase include the change description in the id when generating changesets?'
     required: false
   headless: # bool
-    description: 'Force liquibase to think it has no access to a keyboard'
+    description: 'Force Liquibase to think it has no access to a keyboard'
     required: false
   includeCatalogInSpecification: # bool
     description: 'Should Liquibase include the catalog name when determining equality?'
@@ -190,6 +190,9 @@ inputs:
   mirrorConsoleMessagesToLog: # bool
     description: 'When set to true, the console messages are mirrored to the logs as [liquibase.ui] to provide a more complete picture of liquibase operations to log analysis tools. Set to false to change this behavior.'
     required: false
+  mirrorOutputToConsole: # bool
+    description: '[PRO]When set to true, console output will be mirrored to both the specified output-file and the console. If output-file is not set, the "mirror-output-to-console" argument has no effect.'
+    required: false
   missingPropertyMode: # string
     description: 'How to handle changelog property expressions where a value is not set. For example, a string "${address}" when no "address" property was defined. Values can be: "preserve" which leaves the string as-is, "empty" which replaces it with an empty string, or "error" which stops processing with an error.'
     required: false
@@ -215,7 +218,7 @@ inputs:
     description: 'Line separator for output'
     required: false
   preserveSchemaCase: # bool
-    description: 'Should liquibase treat schema and catalog names as case sensitive?'
+    description: 'If true, Liquibase treats schema and catalog names as case sensitive'
     required: false
   proForceOnPartialChanges: # bool
     description: 'If true, rollback execution will be forced when having partial changes that needs to be rolled back. Defaults to false.'
@@ -225,6 +228,12 @@ inputs:
     required: false
   proGlobalEndDelimiterPrioritized: # bool
     description: '[PRO]If true, the global end delimiter overrides all other settings'
+    required: false
+  proGlobalStripComments: # bool
+    description: '[PRO]The default strip comments to use for all change sets'
+    required: false
+  proGlobalStripCommentsPrioritized: # bool
+    description: '[PRO]If true, the global strip comments overrides all other settings'
     required: false
   proLicenseKey: # string
     description: 'DEPRECATED: Liquibase Pro license key used to unlock paid capabilities. Get a free trial at https://www.liquibase.com/protrial and use in CLI or add liquibase.pro.licenseKey=<yourKey> into your defaults file.'
@@ -238,6 +247,9 @@ inputs:
   proSynonymsDropPublic: # bool
     description: 'If false, do not drop public synonyms in diffChangeLog/dropAll'
     required: false
+  proStrict: # bool
+    description: '[PRO]If true, the Liquibase operations will fail when specified paths to Pro resource files (flow files, checks settings files, native executor conf files, etc) or rollback scripts are missing or empty.'
+    required: false
   promptForNonLocalDatabase: # bool
     description: 'Should Liquibase prompt if a non-local database is being accessed'
     required: false
@@ -245,16 +257,22 @@ inputs:
     description: 'Implementation of Properties class to provide additional driver properties'
     required: false
   reportsEnabled: # bool
-    description: 'Enable or disable reporting.'
+    description: '[PRO]Enable or disable reporting.'
     required: false
   reportsFormat: # string
-    description: 'The format of the report. Currently, can only be set to "html".'
+    description: '[PRO]The format of the report. Currently, can only be set to "html".'
     required: false
   reportsName: # string
-    description: 'The name of the reports.'
+    description: '[PRO]The name of the reports.'
+    required: false
+  reportsOpen: # bool
+    description: '[PRO]Open the newly generated report in your default browser.'
     required: false
   reportsPath: # string
-    description: 'The path to the directory to generate the reports.'
+    description: '[PRO]The path to the directory to generate the reports.'
+    required: false
+  reportsQuiet: # bool
+    description: '[PRO]Minimize the amount of logging when generating reports.'
     required: false
   searchPath: # string
     description: 'Complete list of Location(s) to search for files such as changelog files in. Multiple paths can be specified by separating them with commas.'
@@ -274,6 +292,9 @@ inputs:
   showHiddenArgs: # bool
     description: 'If true, all command arguments marked as hidden will be shown in the help output, ignoring the hidden flag. NOTE, due to the order of value provider loading at such an early point in Liquibase startup, you MUST set this as a environment variable. Command line parameters will not be recognized.'
     required: false
+  sqlAlwaysSetFetchSize: # bool
+    description: 'If true, all queries will have their fetch size set to the fetch size defined in their database implementation. This has the effect of informing the driver how many rows should be fetched when processing the result set. This is not guaranteed to be respected by the driver, but if respected, should improve query performance significantly.'
+    required: false
   sqlLogLevel: # string
     description: 'Level to log SQL statements to'
     required: false
@@ -281,10 +302,19 @@ inputs:
     description: 'Show SQLWarning messages'
     required: false
   strict: # bool
-    description: 'Be stricter on allowed Liquibase configuration and setup?'
+    description: 'If true, Liquibase enforces certain best practices and proactively looks for common errors'
     required: false
   supportPropertyEscaping: # bool
     description: 'Support escaping changelog parameters using a colon. Example: ${:user.name}'
+    required: false
+  supportsMethodValidationLevel: # string
+    description: 'Controls the level of validation performed on the supports method of Change classes. Options are OFF, WARN, FAIL.'
+    required: false
+  suppressLiquibaseSql: # bool
+    description: 'When set to true, this global property prevents DBCL and DBCLH sql from being present in console and logs during *-sql commands, such as update-sql, rollback-sql, etc.'
+    required: false
+  trimLoadDataFileHeader: # bool
+    description: 'If true column headers will be trimmed in case they were specified with spaces in the file.'
     required: false
   uiService: # string
     description: 'Changes the default UI Service Logger used by Liquibase. Options are CONSOLE or LOGGER.'
@@ -293,7 +323,7 @@ inputs:
     description: 'If set to true (default value), createProcedure tags with a set schemaName will modify the procedure body with the given schema name.'
     required: false
   validateXmlChangelogFiles: # bool
-    description: 'Will perform xsd validation of XML changelog files. When many XML changelog files are included this validation may impact Liquibase performance. Defaults to true.'
+    description: 'Will perform XSD validation of XML changelog files. When many XML changelog files are included, this validation may impact Liquibase performance. Defaults to true.'
     required: false
   workaroundOracleClobCharacterLimit: # bool
     description: 'If true, long strings in Oracle will be chunked at 4000 characters when an insert statement is run, to avoid running afoul of Oracle"s 4000 character limit for insert statements to clob type columns (which appears as "ORA-01704: string literal too long.")'
@@ -364,6 +394,7 @@ runs:
     - ${{ inputs.logFormat }}
     - ${{ inputs.logLevel }}
     - ${{ inputs.mirrorConsoleMessagesToLog }}
+    - ${{ inputs.mirrorOutputToConsole }}
     - ${{ inputs.missingPropertyMode }}
     - ${{ inputs.monitorPerformance }}
     - ${{ inputs.nativeExecutor }}
@@ -376,26 +407,35 @@ runs:
     - ${{ inputs.proForceOnPartialChanges }}
     - ${{ inputs.proGlobalEndDelimiter }}
     - ${{ inputs.proGlobalEndDelimiterPrioritized }}
+    - ${{ inputs.proGlobalStripComments }}
+    - ${{ inputs.proGlobalStripCommentsPrioritized }}
     - ${{ inputs.proLicenseKey }}
     - ${{ inputs.proMarkUnusedNotDrop }}
     - ${{ inputs.proSqlInline }}
     - ${{ inputs.proSynonymsDropPublic }}
+    - ${{ inputs.proStrict }}
     - ${{ inputs.promptForNonLocalDatabase }}
     - ${{ inputs.propertyProviderClass }}
     - ${{ inputs.reportsEnabled }}
     - ${{ inputs.reportsFormat }}
     - ${{ inputs.reportsName }}
+    - ${{ inputs.reportsOpen }}
     - ${{ inputs.reportsPath }}
+    - ${{ inputs.reportsQuiet }}
     - ${{ inputs.searchPath }}
     - ${{ inputs.secureParsing }}
     - ${{ inputs.shouldRun }}
     - ${{ inputs.shouldSnapshotData }}
     - ${{ inputs.showBanner }}
     - ${{ inputs.showHiddenArgs }}
+    - ${{ inputs.sqlAlwaysSetFetchSize }}
     - ${{ inputs.sqlLogLevel }}
     - ${{ inputs.sqlShowSqlWarnings }}
     - ${{ inputs.strict }}
     - ${{ inputs.supportPropertyEscaping }}
+    - ${{ inputs.supportsMethodValidationLevel }}
+    - ${{ inputs.suppressLiquibaseSql }}
+    - ${{ inputs.trimLoadDataFileHeader }}
     - ${{ inputs.uiService }}
     - ${{ inputs.useProcedureSchema }}
     - ${{ inputs.validateXmlChangelogFiles }}
